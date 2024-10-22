@@ -115,7 +115,7 @@ const ActiveUsers = () => {
             <Card>
               <CardContent>
                 <Typography variant="h5">Username: {user.username}</Typography>
-                <Typography variant="h5">Password: {user.username}</Typography>
+                <Typography variant="h5">Password: {user.password}</Typography>
                 <Typography variant="body2">Full Name: {user.fullName}</Typography>
                 <Typography variant="body2">Email: {user.email}</Typography>
                 <Typography variant="body2">Phone Number: {user.phoneNumber}</Typography>
