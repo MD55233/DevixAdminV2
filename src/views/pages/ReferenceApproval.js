@@ -7,7 +7,6 @@ const ReferenceApproval = () => {
   const [approvals, setApprovals] = useState([]);
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchPendingApprovals = async () => {
@@ -26,41 +25,20 @@ const ReferenceApproval = () => {
     fetchPendingApprovals();
   }, []);
 
+  // Function to handle "View Details" click and set the selected approval
   const handleApprovalClick = (approval) => {
     setSelectedApproval(approval);
   };
 
-  const handleApprove = async () => {
-    setProcessing(true);
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_API_HOST}/api/approvals/referral/approve`, {
-        id: selectedApproval._id,
-      });
-      console.log(response.data); // Assuming the backend sends a success message
-      setApprovals(approvals.filter((approval) => approval._id !== selectedApproval._id));
-      setSelectedApproval(null);
-    } catch (error) {
-      setError('Error approving request.');
-    } finally {
-      setProcessing(false);
-    }
+  // Handlers for approval and rejection
+  const handleApprove = () => {
+    // Logic for approving goes here
+    setSelectedApproval(null);  // Clear the selection after approval
   };
 
-  const handleReject = async (feedback) => {
-    setProcessing(true);
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_API_HOST}/api/approvals/referral/reject`, {
-        id: selectedApproval._id,
-        feedback,
-      });
-      console.log(response.data); // Assuming the backend sends a success message
-      setApprovals(approvals.filter((approval) => approval._id !== selectedApproval._id));
-      setSelectedApproval(null);
-    } catch (error) {
-      setError('Error rejecting request.');
-    } finally {
-      setProcessing(false);
-    }
+  const handleReject = () => {
+    // Logic for rejecting goes here
+    setSelectedApproval(null);  // Clear the selection after rejection
   };
 
   return (
@@ -87,7 +65,7 @@ const ReferenceApproval = () => {
                   <CardContent>
                     <Typography variant="h5">Username: {approval.username}</Typography>
                     <Typography variant="body2">Transaction ID: {approval.transactionId}</Typography>
-                    <Typography variant="body2">Amount: PKR{approval.transactionAmount}</Typography>
+                    <Typography variant="body2">Amount: PKR {approval.transactionAmount}</Typography>
                     <Typography variant="body2">Gateway: {approval.gateway}</Typography>
                     <Typography variant="body2">Status: {approval.status}</Typography>
                     <Typography variant="body2">
@@ -97,10 +75,9 @@ const ReferenceApproval = () => {
                       variant="contained"
                       color="primary"
                       sx={{ mt: 2 }}
-                      onClick={() => handleApprovalClick(approval)}
-                      disabled={processing}
+                      onClick={() => handleApprovalClick(approval)} // Opens ReferralDetails on click
                     >
-                      {processing ? <CircularProgress size={24} /> : 'View Details'}
+                      View Details
                     </Button>
                   </CardContent>
                 </Card>

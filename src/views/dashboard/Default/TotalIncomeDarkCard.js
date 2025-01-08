@@ -94,7 +94,7 @@ const TotalIncomeDarkCard = ({ isLoading }) => {
                   }}
                   primary={
                     <Typography variant="h4" sx={{ color: '#fff' }}>
-                      PKR{profit} This Month
+                      {profit} This Month
                     </Typography>
                   }
                   secondary={

@@ -17,9 +17,11 @@ const TrainingBonusApproved = Loadable(lazy(() => import('views/utilities/Traini
 
 // User Routes
 const ActiveUsers = Loadable(lazy(() => import('views/user/ActiveUsers')));
+const PaymentAccount = Loadable(lazy(() => import('views/user/PaymentPlan')));
+const TasksManagement = Loadable(lazy(() => import('views/user/TasksManagement')));
 const AddUser = Loadable(lazy(() => import('views/user/AddUser')));
 const AdminNotification = Loadable(lazy(() => import('views/user/AdminNotification')));
-
+const Contact = Loadable(lazy(() => import('views/user/Contact')));
 // Withdrawal Routes
 const WithdrawalApproval = Loadable(lazy(() => import('views/pages/WithdrawalApproval'))); // New route
 
@@ -27,6 +29,7 @@ const WithdrawalApproval = Loadable(lazy(() => import('views/pages/WithdrawalApp
 const UpdateProductProfitBalance = Loadable(lazy(() => import('views/pages/UpdateProductProfitBalance'))); // New route
 const PlansManagement = Loadable(lazy(() => import('views/user/PlansManagement')));
 
+const AllNotification = Loadable(lazy(() => import('views/user/AllNotifications')));
 const AdminTransactionHistory = Loadable(lazy(() => import('views/utilities/AdminTransactionHistory')));
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -72,6 +75,14 @@ const MainRoutes = {
           element: <ActiveUsers />
         },
         {
+          path: 'tasks-management',
+          element: <TasksManagement />
+        },
+        {
+          path: 'payment-accounts',
+          element: <PaymentAccount />
+        },
+        {
           path: 'plans-management',
           element: <PlansManagement />
         },
@@ -83,6 +94,14 @@ const MainRoutes = {
           path: 'admin-notification',
           element: <AdminNotification />
         },
+        {
+          path: 'all-notification',
+          element: <AllNotification />
+        },
+        {
+          path: 'contact-us',
+          element: <Contact/>
+        }
       ]
     },
     {

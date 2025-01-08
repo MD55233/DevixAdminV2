@@ -2,23 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Button, Typography, Grid, Card, CardContent, TextField } from '@mui/material';
 import axios from 'axios';
 
-const PlansManagement = () => {
+const InvestmentPlansManagement = () => {
   const [plans, setPlans] = useState([]);
   const [newPlan, setNewPlan] = useState({
     name: '',
     price: '',
-    advancePoints: '',
-    DirectPoint: '',
-    IndirectPoint: '',
-    parent: '',
-    grandParent: ''
+    DailyTaskLimit: '',
+    DirectBonus: '',
+    IndirectBonus: '',
   });
 
   // Fetch all plans
   const fetchPlans = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_HOST}/api/plans`);
-      setPlans(response.data);
+      setPlans(response.data); // Assuming plans are returned in the root
     } catch (error) {
       console.error('Error fetching plans:', error);
     }
@@ -36,11 +34,9 @@ const PlansManagement = () => {
       setNewPlan({
         name: '',
         price: '',
-        advancePoints: '',
-        DirectPoint: '',
-        IndirectPoint: '',
-        parent: '',
-        grandParent: ''
+        DailyTaskLimit: '',
+        DirectBonus: '',
+        IndirectBonus: '',
       });
     } catch (error) {
       console.error('Error adding plan:', error);
@@ -86,41 +82,25 @@ const PlansManagement = () => {
               margin="normal"
             />
             <TextField
-              label="Advance Points"
-              name="advancePoints"
-              value={newPlan.advancePoints}
+              label="Daily Task Limit"
+              name="DailyTaskLimit"
+              value={newPlan.DailyTaskLimit}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
             />
             <TextField
-              label="Direct Points"
-              name="DirectPoint"
-              value={newPlan.DirectPoint}
+              label="Direct Bonus"
+              name="DirectBonus"
+              value={newPlan.DirectBonus}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
             />
             <TextField
-              label="Indirect Points"
-              name="IndirectPoint"
-              value={newPlan.IndirectPoint}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Parent"
-              name="parent"
-              value={newPlan.parent}
-              onChange={handleInputChange}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Grand Parent"
-              name="grandParent"
-              value={newPlan.grandParent}
+              label="Indirect Bonus"
+              name="IndirectBonus"
+              value={newPlan.IndirectBonus}
               onChange={handleInputChange}
               fullWidth
               margin="normal"
@@ -139,12 +119,15 @@ const PlansManagement = () => {
             <CardContent>
               <Typography variant="h5">{plan.name}</Typography>
               <Typography variant="body2">Price: ${plan.price}</Typography>
-              <Typography variant="body2">Advance Points: {plan.advancePoints}</Typography>
-              <Typography variant="body2">Direct Points: {plan.DirectPoint}</Typography>
-              <Typography variant="body2">Indirect Points: {plan.IndirectPoint}</Typography>
-              <Typography variant="body2">Parent: {plan.parent}</Typography>
-              <Typography variant="body2">Grand Parent: {plan.grandParent}</Typography>
-              <Button variant="contained" color="secondary" sx={{ mt: 2 }} onClick={() => handleDeletePlan(plan._id)}>
+              <Typography variant="body2">Daily Task Limit: {plan.DailyTaskLimit}</Typography>
+              <Typography variant="body2">Direct Bonus: ${plan.DirectBonus}</Typography>
+              <Typography variant="body2">Indirect Bonus: ${plan.IndirectBonus}</Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{ mt: 2 }}
+                onClick={() => handleDeletePlan(plan._id)}
+              >
                 Delete Plan
               </Button>
             </CardContent>
@@ -155,4 +138,4 @@ const PlansManagement = () => {
   );
 };
 
-export default PlansManagement;
+export default InvestmentPlansManagement;

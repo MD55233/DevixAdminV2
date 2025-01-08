@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Grid, Card, CardContent, TextField } from '@mui/material';
+import { Button, Typography, Grid, Card, CardContent, TextField, Switch, FormControlLabel } from '@mui/material';
 import axios from 'axios';
 import AddUser from './AddUser';
 
@@ -8,6 +8,7 @@ const ActiveUsers = () => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null); // For both adding and editing
+  const [withdrawalEnabled, setWithdrawalEnabled] = useState(false);
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -20,8 +21,29 @@ const ActiveUsers = () => {
     }
   };
 
+  // Fetch withdrawal status from the server
+  const fetchWithdrawalStatus = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_HOST}/api/settings/withdrawal-status`);
+      setWithdrawalEnabled(response.data.withdrawalEnabled); // Update with new schema key
+    } catch (error) {
+      console.error('Error fetching withdrawal status:', error);
+    }
+  };
+
+  const toggleWithdrawalStatus = async () => {
+    try {
+      const newStatus = !withdrawalEnabled;
+      await axios.post(`${process.env.REACT_APP_API_HOST}/api/settings/withdrawal-status`, { withdrawalEnabled: newStatus }); // Update with new schema key
+      setWithdrawalEnabled(newStatus);
+    } catch (error) {
+      console.error('Error updating withdrawal status:', error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchWithdrawalStatus();
   }, []);
 
   // Handle add or edit user
@@ -52,8 +74,8 @@ const ActiveUsers = () => {
 
     // Filter users based on search term
     if (value) {
-      const filtered = users.filter(user => 
-        user.fullName.toLowerCase().includes(value) || 
+      const filtered = users.filter((user) =>
+        user.fullName.toLowerCase().includes(value) ||
         user.username.toLowerCase().includes(value)
       );
       setFilteredUsers(filtered);
@@ -62,18 +84,42 @@ const ActiveUsers = () => {
     }
   };
 
-  // Reset points for all users
-  const handleResetPoints = async () => {
+  // Transfer pending commission to main balance for a single user
+  const handleTransferCommission = async (username) => {
     try {
-      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/reset-points`);
-      fetchUsers(); // Refresh the users list after reset
+      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/transfer-commission/${username}`);
+      fetchUsers(); // Refresh the users list after transfer
     } catch (error) {
-      console.error('Error resetting points:', error);
+      console.error('Error transferring pending commission:', error);
+    }
+  };
+
+  // Transfer all users' pending commissions to main balance
+  const handleTransferAllCommissions = async () => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/transfer-all-commissions`);
+      fetchUsers(); // Refresh the users list after transfer
+    } catch (error) {
+      console.error('Error transferring all pending commissions:', error);
     }
   };
 
   return (
     <Grid container spacing={3}>
+      {/* Withdrawal Toggle Button */}
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={withdrawalEnabled}
+              onChange={toggleWithdrawalStatus}
+              color="primary"
+            />
+          }
+          label={withdrawalEnabled ? 'Withdrawals Enabled' : 'Withdrawals Disabled'}
+        />
+      </Grid>
+
       {/* Search Bar */}
       <Grid item xs={12}>
         <TextField
@@ -86,14 +132,15 @@ const ActiveUsers = () => {
         />
       </Grid>
 
-      {/* Reset Points Button */}
+      {/* Transfer All Pending Commissions Button */}
       <Grid item xs={12}>
         <Button
           variant="contained"
-          color="warning"
-          onClick={handleResetPoints}
+          color="success"
+          onClick={handleTransferAllCommissions}
+          style={{ marginBottom: '20px' }}
         >
-          Reset All User Points
+          Transfer All Pending Commissions
         </Button>
       </Grid>
 
@@ -119,31 +166,12 @@ const ActiveUsers = () => {
                 <Typography variant="body2">Full Name: {user.fullName}</Typography>
                 <Typography variant="body2">Email: {user.email}</Typography>
                 <Typography variant="body2">Phone Number: {user.phoneNumber}</Typography>
+                <Typography variant="body2">Account Type: {user.accountType}</Typography>
                 <Typography variant="body2">Balance: ${user.balance}</Typography>
-                <Typography variant="body2">Advance Points: {user.advancePoints}</Typography>
-                <Typography variant="body2">Total Points: {user.totalPoints}</Typography>
-                <Typography variant="body2">Direct Points: {user.directPoints}</Typography>
-                <Typography variant="body2">Indirect Points: {user.indirectPoints}</Typography>
-                <Typography variant="body2">Training Bonus Balance: ${user.trainingBonusBalance}</Typography>
-                <Typography variant="body2">Plan: {user.plan}</Typography>
-                <Typography variant="body2">Rank: {user.rank}</Typography>
-                <Typography variant="body2">Referral Percentage: {user.refPer}%</Typography>
-                <Typography variant="body2">Parent Referral Percentage: {user.refParentPer}%</Typography>
-
-                {/* Product Profit History */}
-                <Typography variant="body2" gutterBottom>Product Profit History:</Typography>
-                {user.productProfitHistory.length > 0 ? (
-                  user.productProfitHistory.map((history, index) => (
-                    <div key={index}>
-                      <Typography variant="body2">Amount: ${history.amount}</Typography>
-                      <Typography variant="body2">Direct Points Increment: {history.directPointsIncrement}</Typography>
-                      <Typography variant="body2">Total Points Increment: {history.totalPointsIncrement}</Typography>
-                      <Typography variant="body2">Date: {new Date(history.createdAt).toLocaleDateString()}</Typography>
-                    </div>
-                  ))
-                ) : (
-                  <Typography variant="body2">No Product Profit History</Typography>
-                )}
+                <Typography variant="body2">Withdrawal Balance: ${user.withdrawalBalance}</Typography>
+                <Typography variant="body2">Bonus Balance: ${user.bonusBalance}</Typography>
+                <Typography variant="body2">Daily Task Limit: {user.dailyTaskLimit}</Typography>
+                <Typography variant="body2">Pending Commission: ${user.pendingCommission}</Typography>
 
                 <Button
                   variant="contained"
@@ -165,9 +193,9 @@ const ActiveUsers = () => {
                   variant="contained"
                   color="success"
                   sx={{ mt: 2, ml: 2 }}
-                  onClick={() => handleAddOrEditUserClick({ parent: user })} // Add user under parent
+                  onClick={() => handleTransferCommission(user.username)}
                 >
-                  Add User Under Parent
+                  Transfer Pending Commission
                 </Button>
               </CardContent>
             </Card>

@@ -6,7 +6,7 @@ import { ButtonBase, Typography, Box } from '@mui/material';
 
 // project imports
 import config from 'config';
-import fairyglowberry from 'assets/images/fairyglowberry.svg'; // Adjust the path to where your SVG file is located
+import laikostarberry from 'assets/images/laikostarberry.svg'; // Adjust the path to where your SVG file is located
 import { MENU_OPEN } from 'store/actions';
 
 // ==============================|| MAIN LOGO ||============================== //
@@ -26,7 +26,7 @@ const LogoSection = () => {
       <Box sx={{ mt: 1, mr: 0.5 }}>
         {' '}
         {/* Add top margin to logo and reduce right margin */}
-        <img src={fairyglowberry} alt="Logo" width="92" height="32" />
+        <img src={laikostarberry} alt="Logo" width="92" height="32" />
       </Box>
       <Box sx={{ display: 'flex' }}>
         <Typography
