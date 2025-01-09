@@ -39,55 +39,55 @@
   app.use(cors());
 
   // User Model
-  const userSchema = new mongoose.Schema(
-    {
-      fullName: { type: String, required: true, trim: true },
-      username: { type: String, required: true, unique: true, trim: true },
-      password: { type: String, required: true },
-      email: { type: String, required: true, unique: true, trim: true },
-      phoneNumber: { type: String, required: true },
-      accountType: { type: String, required: true }, // e.g., "Starter", "Pro", "Premium"
-      balance: { type: Number, default: 0 },
-      withdrawalBalance: { type: Number, default: 0 },
-      dailyTaskLimit: { type: Number, required: true },
-      lastCompletedDate: { type: Date, default: null },
-      tasksCompletedToday: { type: Number, default: 0 },
-      bonusBalance: { type: Number, default: 0 },
-      referralDetails: {
-        referralCode: { type: String, unique: true },
-        referrer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-      },
-      taskHistory: [
-        {
-          taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
-          completedAt: { type: Date },
-          reward: { type: Number },
-        },
-      ],
-      transactionHistory: [
-        {
-          type: { type: String, required: true }, // "credit" or "debit"
-          amount: { type: Number, required: true },
-          description: { type: String, trim: true },
-          createdAt: { type: Date, default: Date.now },
-        },
-      ],
-      commissionPendingTasks: [
-        {
-          taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
-          commissionAmount: { type: Number, required: true },
-          releaseDate: { type: Date, required: true },
-        },
-      ],
-      planActivationDate: { type: Date, default: null },
-      profilePicture: { type: String, default: null },
-      parent: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-      pendingCommission: { type: Number, default: 0 },
+const userSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    username: { type: String, required: true,  unique: true },
+    password: { type: String, required: true , unique: true },
+    email: { type: String, required: true},
+    phoneNumber: { type: String, required: true },
+    accountType: { type: String, required: true,  default: 'Starter' }, // e.g., "Starter", "Pro", "Premium"
+    balance: { type: Number, default: 0 },
+    withdrawalBalance: { type: Number, default: 0 },
+    dailyTaskLimit: { type: Number, required: true , default: 0},
+    lastCompletedDate: { type: Date, default: null },
+    tasksCompletedToday: { type: Number, default: 0 },
+    bonusBalance: { type: Number, default: 0 },
+    referralDetails: {
+      referralCode: { type: String },
+      referrer: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     },
-    { timestamps: true }
-  );
+    taskHistory: [
+      {
+        taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+        completedAt: { type: Date },
+        reward: { type: Number },
+      },
+    ],
+    transactionHistory: [
+      {
+        type: { type: String, required: true }, // "credit" or "debit"
+        amount: { type: Number, required: true },
+        description: { type: String, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    commissionPendingTasks: [
+      {
+        taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+        commissionAmount: { type: Number, required: true },
+        releaseDate: { type: Date, required: true },
+      },
+    ],
+    planActivationDate: { type: Date, default: null },
+    profilePicture: { type: String, default: null },
+    parent: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    pendingCommission: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
 
-  const User = mongoose.model('User', userSchema);  // Define User model
+const User = mongoose.model('User', userSchema);  // Define User model
 
   // Admin Schema
   const adminSchema = new mongoose.Schema({
@@ -104,6 +104,36 @@
   }, { timestamps: true });
 
   const Admin = mongoose.model('Admin', adminSchema);
+
+
+
+// POST route to create an admin
+app.post('/api/admins', async (req, res) => {
+  const { fullName, username, password } = req.body;
+
+  try {
+    // Check if the username already exists
+    const existingAdmin = await Admin.findOne({ username });
+    if (existingAdmin) {
+      return res.status(400).json({ success: false, message: 'Username already exists. Please choose a different username.' });
+    }
+
+    // Create a new admin
+    const newAdmin = new Admin({
+      fullName,
+      username,
+      password, // Ensure you hash the password before saving in production
+    });
+
+    // Save to the database
+    await newAdmin.save();
+
+    res.status(201).json({ success: true, message: 'Admin created successfully', admin: newAdmin });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 // Get full name by username
 app.get('/api/users/fullname/:username', async (req, res) => {
   try {
@@ -114,6 +144,64 @@ app.get('/api/users/fullname/:username', async (req, res) => {
     res.send({ fullName: user.fullName });
   } catch (err) {
     res.status(500).send(err);
+  }
+});
+
+// POST Route to Add a New User
+app.post('/users', async (req, res) => {
+  try {
+    const {
+      fullName,
+      username,
+      password,
+      email,
+      phoneNumber,
+      accountType,
+      balance,
+      withdrawalBalance,
+      dailyTaskLimit,
+      lastCompletedDate,
+      tasksCompletedToday,
+      bonusBalance,
+      referralDetails,
+      taskHistory,
+      transactionHistory,
+      commissionPendingTasks,
+      planActivationDate,
+      profilePicture,
+      parent,
+      pendingCommission,
+    } = req.body;
+
+    // Create a new user instance
+    const newUser = new User({
+      fullName,
+      username,
+      password,
+      email,
+      phoneNumber,
+      accountType,
+      balance,
+      withdrawalBalance,
+      dailyTaskLimit,
+      lastCompletedDate,
+      tasksCompletedToday,
+      bonusBalance,
+      referralDetails,
+      taskHistory,
+      transactionHistory,
+      commissionPendingTasks,
+      planActivationDate,
+      profilePicture,
+      parent,
+      pendingCommission,
+    });
+
+    // Save the user to the database
+    const savedUser = await newUser.save();
+    res.status(201).json({ message: 'User created successfully', user: savedUser });
+  } catch (error) {
+    res.status(400).json({ message: 'Error creating user', error: error.message });
   }
 });
 

@@ -6,7 +6,7 @@ import { ButtonBase, Typography, Box } from '@mui/material';
 
 // project imports
 import config from 'config';
-import laikostarberry from 'assets/images/laikostarberry.svg'; // Adjust the path to where your SVG file is located
+import laikostarberry from 'assets/images/laikostarberry.png'; // Adjust the path to where your SVG file is located
 import { MENU_OPEN } from 'store/actions';
 
 // ==============================|| MAIN LOGO ||============================== //
@@ -39,7 +39,7 @@ const LogoSection = () => {
             color: 'secondary.main'
           }}
         >
-          Fairy
+          Laiko
         </Typography>
         <Typography
           variant="h6"
@@ -52,7 +52,7 @@ const LogoSection = () => {
             mr: 3
           }}
         >
-          Glow
+          Star
         </Typography>
       </Box>
     </ButtonBase>

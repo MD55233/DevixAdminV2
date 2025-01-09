@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Button, Grid, TextField } from '@mui/material';
+import { Button, Grid, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 
 const EditUser = ({ user, onSuccess, onCancel }) => {
   const [updatedUser, setUpdatedUser] = useState({ ...user });
 
-  // Handle form change
+  // Handle form changes
   const handleInputChange = (e) => {
-    setUpdatedUser({ ...updatedUser, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setUpdatedUser({ ...updatedUser, [name]: value });
   };
 
   // Handle update user
@@ -26,6 +27,12 @@ const EditUser = ({ user, onSuccess, onCancel }) => {
 
   return (
     <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Typography variant="h5" gutterBottom>
+          Edit User Details
+        </Typography>
+      </Grid>
+
       <Grid item xs={12}>
         <TextField
           label="Full Name"
@@ -60,93 +67,72 @@ const EditUser = ({ user, onSuccess, onCancel }) => {
           margin="normal"
         />
         <TextField
+          label="Account Type"
+          name="accountType"
+          value={updatedUser.accountType}
+          onChange={handleInputChange}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
           label="Balance"
           name="balance"
           value={updatedUser.balance}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
+          type="number"
         />
         <TextField
-          label="Advance Points"
-          name="advancePoints"
-          value={updatedUser.advancePoints}
+          label="Withdrawal Balance"
+          name="withdrawalBalance"
+          value={updatedUser.withdrawalBalance}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
+          type="number"
         />
         <TextField
-          label="Direct Points"
-          name="directPoints"
-          value={updatedUser.directPoints}
+          label="Daily Task Limit"
+          name="dailyTaskLimit"
+          value={updatedUser.dailyTaskLimit}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
+          type="number"
         />
         <TextField
-          label="Indirect Points"
-          name="indirectPoints"
-          value={updatedUser.indirectPoints}
+          label="Bonus Balance"
+          name="bonusBalance"
+          value={updatedUser.bonusBalance}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
+          type="number"
         />
         <TextField
-          label="Training Bonus Balance"
-          name="trainingBonusBalance"
-          value={updatedUser.trainingBonusBalance}
+          label="Pending Commission"
+          name="pendingCommission"
+          value={updatedUser.pendingCommission}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
+          type="number"
         />
-        <TextField
-          label="Plan"
-          name="plan"
-          value={updatedUser.plan}
-          onChange={handleInputChange}
-          fullWidth
-          margin="normal"
-        />
-        <TextField
-          label="Rank"
-          name="rank"
-          value={updatedUser.rank}
-          onChange={handleInputChange}
-          fullWidth
-          margin="normal"
-        />
-        <TextField
-          label="Referrer Percentage"
-          name="refPer"
-          value={updatedUser.refPer}
-          onChange={handleInputChange}
-          fullWidth
-          margin="normal"
-        />
-        <TextField
-          label="Referrer Parent Percentage"
-          name="refParentPer"
-          value={updatedUser.refParentPer}
-          onChange={handleInputChange}
-          fullWidth
-          margin="normal"
-        />
-        <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleUpdateUser}>
+      </Grid>
+
+      <Grid item xs={12} display="flex" justifyContent="space-between">
+        <Button variant="contained" color="primary" onClick={handleUpdateUser}>
           Update User
         </Button>
-        <Button variant="contained" color="secondary" sx={{ mt: 2, ml: 2 }} onClick={onCancel}>
+        <Button variant="contained" color="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Grid container spacing={3}>
-      {/* Existing fields */}
-      <Button variant="contained" color="primary" onClick={handleOpenAddUser}>
-        Add User Under This      
-      </Button>
-      {/* Other buttons */}
-    </Grid>
+        <Button variant="contained" color="primary" onClick={handleOpenAddUser}>
+          Add User Under This
+        </Button>
       </Grid>
     </Grid>
-    
   );
 };
 
