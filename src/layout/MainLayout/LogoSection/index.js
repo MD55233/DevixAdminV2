@@ -39,7 +39,7 @@ const LogoSection = () => {
             color: 'secondary.main'
           }}
         >
-          Fairy
+          Laiko
         </Typography>
         <Typography
           variant="h6"
@@ -52,7 +52,7 @@ const LogoSection = () => {
             mr: 3
           }}
         >
-          Glow
+          Star
         </Typography>
       </Box>
     </ButtonBase>
