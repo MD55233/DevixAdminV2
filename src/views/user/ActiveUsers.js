@@ -167,11 +167,11 @@ const ActiveUsers = () => {
                 <Typography variant="body2">Email: {user.email}</Typography>
                 <Typography variant="body2">Phone Number: {user.phoneNumber}</Typography>
                 <Typography variant="body2">Account Type: {user.accountType}</Typography>
-                <Typography variant="body2">Balance: ${user.balance}</Typography>
-                <Typography variant="body2">Withdrawal Balance: ${user.withdrawalBalance}</Typography>
-                <Typography variant="body2">Bonus Balance: ${user.bonusBalance}</Typography>
+                <Typography variant="body2">Balance: Rs,{user.balance}</Typography>
+                <Typography variant="body2">Withdrawal Balance: Rs{user.withdrawalBalance}</Typography>
+                <Typography variant="body2">Bonus Balance: Rs{user.bonusBalance}</Typography>
                 <Typography variant="body2">Daily Task Limit: {user.dailyTaskLimit}</Typography>
-                <Typography variant="body2">Pending Commission: ${user.pendingCommission}</Typography>
+                <Typography variant="body2">Pending Commission: Rs{user.pendingCommission}</Typography>
 
                 <Button
                   variant="contained"
