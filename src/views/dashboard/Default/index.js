@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Grid } from '@mui/material';
 // project imports
 import EarningCard from './EarningCard';
+import TotalUsers from './TotalUsers';
 import TotalOrderLineChartCard from './TotalOrderLineChartCard';
 import TotalIncomeDarkCard from './TotalIncomeDarkCard';
 import WelcomeCard from './WelcomeCard';
@@ -23,11 +24,17 @@ const Dashboard = () => {
         <Grid container spacing={gridSpacing}>
           <Grid item lg={4} md={6} sm={6} xs={6}>
             <EarningCard isLoading={isLoading} />
+           
+          </Grid>
+          <Grid item lg={4} md={6} sm={6} xs={6}>
+          <TotalUsers isLoading={isLoading} />
+           
           </Grid>
           <Grid item lg={4} md={6} sm={6} xs={6}>
             <Grid container spacing={gridSpacing}>
               <Grid item sm={6} xs={12} md={12} lg={12}>
                 <WelcomeCard isLoading={isLoading} />
+               
               </Grid>
               <Grid item sm={6} xs={12} md={12} lg={12}>
                 <TotalIncomeDarkCard isLoading={isLoading} />

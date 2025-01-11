@@ -924,7 +924,29 @@ app.post('/api/users/update-product-profit-balance', async (req, res) => {
     res.status(500).json({ message: 'Failed to update product profit balance' });
   }
 });
+app.get('/api/users-activated', async (req, res) => {
+  try {
+    // Fetch users with dailyTaskLimit >= 2
+    const users = await User.find({ dailyTaskLimit: { $gte: 2 } });
+   
+    // Check if no users are found
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found with dailyTaskLimit >= 2' });
+    }
 
+    // Calculate the total number of users
+    const totalUsers = users.length;
+
+    // Send response with users and total count
+    res.status(200).json({
+      totalUsers,
+      users
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Server error. Could not fetch users.' });
+  }
+});
 
 
 
