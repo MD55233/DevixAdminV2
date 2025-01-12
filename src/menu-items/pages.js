@@ -10,7 +10,7 @@ const icons = {
 
 const pages = {
   id: 'pages',
-  title: 'Approvals & History',
+  title: 'Requests ',
   type: 'group',
   children: [
     {

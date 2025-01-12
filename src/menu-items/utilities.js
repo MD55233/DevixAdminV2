@@ -15,7 +15,7 @@ const utilities = {
   children: [
     {
       id: 'Training Bonus Approved',
-      title: 'Training Bonus',
+      title: 'Withdrwal History',
       type: 'item',
       url: '/Approved/Training-bonus',
       icon: icons.IconCircleDashedCheck,
@@ -23,7 +23,7 @@ const utilities = {
     },
     {
       id: 'Referral Payment Approved',
-      title: 'Referral Payment',
+      title: 'Referral Payment History',
       type: 'item',
       url: '/Approved/Referral-Bonus',
       icon: icons.IconCircleDashedCheck,

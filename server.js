@@ -3,9 +3,26 @@
   const path = require('path');
   const mongoose = require('mongoose');
   const cors = require('cors');
+  const nodemailer = require('nodemailer');
   require('dotenv').config();
   const app = express();
   const multer = require('multer');
+
+// SMTP Configuration for Hostinger Webmail
+const transporter = nodemailer.createTransport({
+  host: "smtp.hostinger.com",
+  port: 465,
+  secure: true,
+  auth: {
+      user: 'process.env.SMTP_EMAIL',
+      pass: 'process.env.SMTP_PASSWORD',
+  },
+ auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD,
+},
+
+});
 
   
   const PORT =  9001;
@@ -480,7 +497,6 @@ app.get('/api/approvals/referral/pending-approvals', async (req, res) => {
   }
 });
 
-
 app.post('/api/approvals/referral/approve', async (req, res) => {
   const { transactionId } = req.body;
 
@@ -494,24 +510,23 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
       return res.status(404).json({ message: 'Referral payment not found or already processed.' });
     }
 
-    // Find the user associated with the referral
     const user = await User.findOne({ username: referralPayment.username });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    // Update user's daily task limit
-    user.dailyTaskLimit = referralPayment.DailyTaskLimit;
+    // Update daily task limit only if the new value is greater than the existing one
+    if (referralPayment.DailyTaskLimit > user.dailyTaskLimit) {
+      user.dailyTaskLimit = referralPayment.DailyTaskLimit;
+    }
 
-    // Distribute bonuses
     const { directBonus, indirectBonus, transactionAmount } = referralPayment;
     let totalBonusDistributed = 0;
 
-    // Direct bonus to referrer
+    // Check and distribute direct bonus
     if (user.referralDetails?.referrer) {
       const referrer = await User.findById(user.referralDetails.referrer);
-      if (referrer) {
-        console.log(`Referrer found for user: ${user.username} (${referrer.username}) (${directBonus})`);
+      if (referrer && referrer.dailyTaskLimit > 0) {
         referrer.balance += directBonus;
         referrer.bonusBalance += directBonus;
         referrer.transactionHistory.push({
@@ -522,17 +537,16 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
         await referrer.save();
         totalBonusDistributed += directBonus;
       } else {
-        console.log(`Referrer not found for user: ${user.username}`);
+        console.log(`Referrer has no daily task limit or does not exist for user: ${user.username}`);
       }
     }
 
-    // Indirect bonus to indirect referrer
+    // Check and distribute indirect bonus
     if (user.referralDetails?.referrer) {
       const referrer = await User.findById(user.referralDetails.referrer);
       if (referrer?.referralDetails?.referrer) {
         const indirectReferrer = await User.findById(referrer.referralDetails.referrer);
-        if (indirectReferrer) {
-          console.log(`Indirect referrer found for user: ${user.username} (${indirectReferrer.username})`);
+        if (indirectReferrer && indirectReferrer.dailyTaskLimit > 0) {
           indirectReferrer.balance += indirectBonus;
           indirectReferrer.bonusBalance += indirectBonus;
           indirectReferrer.transactionHistory.push({
@@ -543,7 +557,7 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
           await indirectReferrer.save();
           totalBonusDistributed += indirectBonus;
         } else {
-          console.log(`Indirect referrer not found for referrer: ${referrer.username}`);
+          console.log(`Indirect referrer has no daily task limit or does not exist for referrer: ${referrer.username}`);
         }
       } else {
         console.log(`Referrer does not have an indirect referrer for user: ${user.username}`);
@@ -565,17 +579,50 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
     }
 
     // Approve the referral payment
-    referralPayment.status = 'approved'; // Update the status to approved
-    const approvedPayment = new ReferralApproveds(referralPayment.toObject()); // Clone the document
-    await approvedPayment.save(); // Save to the approved collection
+    referralPayment.status = 'approved';
+    const approvedPayment = new ReferralApproveds(referralPayment.toObject());
+    await approvedPayment.save();
 
-    // Use deleteOne to remove the document
-    await ReferralPaymentVerification.deleteOne({ _id: referralPayment._id }); // Remove from the pending collection
+    await ReferralPaymentVerification.deleteOne({ _id: referralPayment._id });
 
-    // Save the updated user details
     await user.save();
 
-    res.json({ message: 'Referral payment approved and bonuses distributed successfully.' });
+    // Send email to the user
+    const mailOptions = {
+      from: `LaikoStar.Team <${process.env.SMTP_EMAIL}>`,
+      to: user.email, // User's email
+      subject: 'Referral Payment Approved',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #4CAF50; text-align: center;">Congratulations, ${user.username}!</h2>
+          <p>We are excited to inform you that your referral payment has been approved. Here are the details:</p>
+          <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #f9f9f9;">
+            <p><strong>Transaction Amount:</strong> ${transactionAmount}</p>
+            <p><strong>Daily Task Limit Updated To:</strong> ${user.dailyTaskLimit}</p>
+          </div>
+          <p>Bonuses have been distributed to your referrer(s) where applicable. Thank you for contributing to our community.</p>
+          <h3 style="color: #4CAF50;">Keep Growing</h3>
+          <p>Continue sharing and growing your network. Click the button below to log in to your account and explore more opportunities:</p>
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="https://account.laikostar.com/pages/login/login3" 
+               style="text-decoration: none; padding: 10px 20px; color: white; background-color: #4CAF50; border-radius: 5px; font-weight: bold;">Log In to Your Account</a>
+          </div>
+          <p>If you have any questions, feel free to reach out to our support team.</p>
+          <p>Thank you for being a valued member of our community!</p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The Team at LaikoStar</strong></p>
+        </div>
+      `,
+    };
+    
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent successfully:', info.response);
+      }
+    });
+    
+    res.json({ message: 'Referral payment approved, bonuses distributed, and email sent successfully.' });
   } catch (err) {
     console.error('Error approving referral payment:', err);
     res.status(500).json({ message: 'Internal server error', error: err.message });
@@ -599,8 +646,6 @@ const referralRejectedSchema = new mongoose.Schema({
 
 const ReferralRejected = mongoose.model('ReferralRejected', referralRejectedSchema);
 
-
-
 // Reject a referral payment request
 app.post('/api/approvals/referral/reject', async (req, res) => {
   const { transactionId, reason } = req.body;
@@ -610,9 +655,16 @@ app.post('/api/approvals/referral/reject', async (req, res) => {
   }
 
   try {
+    // Find the referral payment in the pending collection
     const referralPayment = await ReferralPaymentVerification.findOne({ transactionId, status: 'pending' });
     if (!referralPayment) {
       return res.status(404).json({ message: 'Referral payment not found or already processed.' });
+    }
+
+    // Fetch the user associated with the referral payment
+    const user = await User.findOne({ username: referralPayment.username });
+    if (!user) {
+      return res.status(404).json({ message: 'User associated with this referral payment not found.' });
     }
 
     // Change the status to rejected and move the record to the ReferralRejected collection
@@ -625,13 +677,32 @@ app.post('/api/approvals/referral/reject', async (req, res) => {
     await rejectedPayment.save(); // Save to the rejected collection
     await ReferralPaymentVerification.deleteOne({ _id: referralPayment._id }); // Remove from the pending collection
 
-    res.json({ message: 'Referral payment rejected successfully.' });
+    // Send email to the user about the rejection
+    await transporter.sendMail({
+      from: `LaikoStar Team <${process.env.SMTP_EMAIL}>`,
+      to: user.email, // Use email from the User schema
+      subject: 'Referral Payment Request Rejected',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #ff0000; text-align: center;">Referral Payment Request Rejected</h2>
+          <p>Dear ${user.fullName},</p>
+          <p>We regret to inform you that your referral payment request with transaction ID <strong>${transactionId}</strong> has been rejected. Below are the details:</p>
+          <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #f9f9f9;">
+            <p><strong>Reason for Rejection:</strong> ${reason}</p>
+            <p><strong>Amount:</strong> ${referralPayment.amount}</p>
+          </div>
+          <p>If you have any questions or need further assistance, please reach out to our support team.</p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The LaikoStar Team</strong></p>
+        </div>
+      `,
+    });
+
+    res.json({ message: 'Referral payment rejected successfully and email sent to the user.' });
   } catch (err) {
     console.error('Error rejecting referral payment:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
-
 
 
 // Define the WithdrawalRequest model
@@ -729,8 +800,6 @@ app.get('/api/withdrawals', async (req, res) => {
   }
 });
 
-
-
 // Approve a withdrawal request
 app.post('/api/withdrawals/approve', async (req, res) => {
   const { id } = req.body;
@@ -747,20 +816,64 @@ app.post('/api/withdrawals/approve', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Find the admin responsible for managing profits
+    const admin = await Admin.findOne(); // Assuming there's one admin record
+    if (!admin) {
+      return res.status(500).json({ message: 'Admin record not found' });
+    }
+
     // Check if the user has sufficient balance (extra safety check)
     if (user.balance < withdrawal.amount) {
       return res.status(400).json({ message: 'Insufficient balance for approval.' });
     }
 
-    // Deduct the balance (now on admin approval)
+    // Deduct the balance from the user
     user.balance -= withdrawal.amount;
     await user.save();
 
-    // Update status to 'approved'
+    // Deduct the withdrawal amount from admin profits
+    admin.totalProfit -= withdrawal.amount;
+    admin.monthlyProfit -= withdrawal.amount;
+
+    // Add the transaction to admin's transaction history
+    admin.transactions.push({
+      amount: withdrawal.amount,
+      type: 'Withdrawal',
+      date: new Date(),
+    });
+
+    await admin.save();
+
+    // Update withdrawal status to 'approved'
     withdrawal.status = 'approved';
     await withdrawal.save();
 
-    res.json({ message: 'Withdrawal approved successfully, balance deducted.' });
+    // Send Email Notification to User
+    await transporter.sendMail({
+      from: `LaikoStar.Team <${process.env.SMTP_EMAIL}>`,
+      to: user.email,
+      subject: 'Your Withdrawal Request is Approved',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #4CAF50; text-align: center;">Withdrawal Approved</h2>
+          <p>Dear ${user.fullName},</p>
+          <p>We are pleased to inform you that your withdrawal request has been approved. The amount has been processed and sent to your provided account details:</p>
+          <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #f9f9f9;">
+            <p><strong>Withdrawal Amount:</strong> ${withdrawal.amount}</p>
+            <p><strong>Account Number:</strong> ${withdrawal.accountNumber}</p>
+            <p><strong>Account Title:</strong> ${withdrawal.accountTitle}</p>
+            <p><strong>Gateway:</strong> ${withdrawal.gateway}</p>
+          </div>
+          <p>Please check your account for the credited amount. If you encounter any issues, feel free to contact our support team.</p>
+          <h3 style="color: #4CAF50;">Need Help?</h3>
+          <p>Our support team is here to assist you. Reach out to us via email or our support page for any questions.</p>
+          <p>Thank you for choosing LaikoStar!</p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The LaikoStar Team</strong></p>
+        </div>
+      `,
+    });
+
+    res.json({ message: 'Withdrawal approved successfully, balance deducted, admin profit updated, and email sent.' });
   } catch (error) {
     console.error('Error approving withdrawal:', error);
     res.status(500).json({ message: 'Failed to approve withdrawal' });
@@ -777,12 +890,45 @@ app.post('/api/withdrawals/reject', async (req, res) => {
       return res.status(404).json({ message: 'Withdrawal request not found' });
     }
 
+    // Find the user associated with the request
+    const user = await User.findById(withdrawal.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     // Update status to 'rejected' and save remarks
     withdrawal.status = 'rejected';
     withdrawal.remarks = feedback;
     await withdrawal.save();
 
-    res.json({ message: 'Withdrawal rejected successfully, no balance adjustments.' });
+    // Send Email Notification to User
+    await transporter.sendMail({
+      from: `LaikoStar.Team <${process.env.SMTP_EMAIL}>`,
+      to: user.email,
+      subject: 'Your Withdrawal Request Has Been Rejected',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #E53935; text-align: center;">Withdrawal Request Rejected</h2>
+          <p>Dear ${user.fullName},</p>
+          <p>We regret to inform you that your withdrawal request has been rejected. Below are the details of your request:</p>
+          <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background: #f9f9f9;">
+            <p><strong>Withdrawal Amount:</strong> ${withdrawal.amount}</p>
+            <p><strong>Account Number:</strong> ${withdrawal.accountNumber}</p>
+            <p><strong>Account Title:</strong> ${withdrawal.accountTitle}</p>
+            <p><strong>Gateway:</strong> ${withdrawal.gateway}</p>
+             <h3 style="color: #E53935;">Reason for Rejection:</h3>
+          <p style="font-weight: bold; color: #333; background-color: #FFEBEE; padding: 10px; border-radius: 5px;">${feedback}</p>
+          </div>
+           <p>We encourage you to review the feedback and make necessary adjustments before submitting a new withdrawal request.</p>
+          <h3 style="color: #E53935;">Need Help?</h3>
+          <p>If you have any questions or require assistance, please contact our support team. We are here to help you.</p>
+          <p>Thank you for your understanding.</p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The LaikoStar Team</strong></p>
+        </div>
+      `,
+    });
+
+    res.json({ message: 'Withdrawal rejected successfully, and email sent with feedback.' });
   } catch (error) {
     console.error('Error rejecting withdrawal:', error);
     res.status(500).json({ message: 'Failed to reject withdrawal' });
@@ -834,6 +980,7 @@ app.get('/api/approvals/referral/approve', async (req, res) => {
     res.status(500).send('Server error: ' + error.message);
   }
 });
+
 
 
 // Fetch all rejected referral payments
@@ -1131,6 +1278,7 @@ app.post('/api/admin/add-profit/:username', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
 
 // Withdraw profit
 app.post('/api/admin/withdraw-profit/:username', async (req, res) => {
