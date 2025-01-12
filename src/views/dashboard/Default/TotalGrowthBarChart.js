@@ -29,8 +29,17 @@ const getBalanceStyles = (balance) => {
   return { backgroundColor: '#f8d7da', color: '#721c24' }; // Light red for negative balance
 };
 
+// Function to get Daily Task Limit styles
+const getTaskLimitStyles = (dailyTaskLimit) => {
+  if (dailyTaskLimit > 0) {
+    return { backgroundColor: '#d4edda', color: '#155724' }; // Light green for positive limit
+  }
+  return { backgroundColor: '#f8d7da', color: '#721c24' }; // Light red for zero limit
+};
+
 const TotalGrowthBarChart = ({ isLoading }) => {
   const [users, setUsers] = useState([]);
+  const [showPositiveBalance, setShowPositiveBalance] = useState(false);
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -60,6 +69,11 @@ const TotalGrowthBarChart = ({ isLoading }) => {
 
   // Calculate total balance
   const totalBalance = users.reduce((acc, user) => acc + user.balance, 0);
+
+  // Filter users based on the balance
+  const displayedUsers = showPositiveBalance
+    ? users.filter((user) => user.balance > 0)
+    : users;
 
   return (
     <MainCard>
@@ -92,32 +106,39 @@ const TotalGrowthBarChart = ({ isLoading }) => {
           PKR {totalBalance.toFixed(2)} {/* Format to 2 decimal places */}
         </Box>
       </Box>
-
+      {/* Filter Button */}
+      <Box sx={{ mb: 2 }}>
+        <Button
+          variant="contained"
+          onClick={() => setShowPositiveBalance(!showPositiveBalance)}
+        >
+          {showPositiveBalance ? 'Show All Users' : 'Show Users with Positive Balance'}
+        </Button>
+      </Box>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Username</TableCell>
               <TableCell>Full Name</TableCell>
-              <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
               <TableCell>Balance</TableCell>
+              <TableCell>Daily Task Limit</TableCell> {/* New Column for Task Limit */}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.length === 0 ? (
+            {displayedUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center">
                   <Typography variant="body1">No users available</Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
+              displayedUsers.map((user) => (
                 <TableRow key={user._id}>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.fullName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phoneNumber}</TableCell>
                   <TableCell>
                     <Box
@@ -131,6 +152,20 @@ const TotalGrowthBarChart = ({ isLoading }) => {
                       }}
                     >
                       {user.balance}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        py: 1,
+                        px: 2,
+                        borderRadius: '4px',
+                        display: 'inline-block',
+                        fontWeight: 'bold',
+                        ...getTaskLimitStyles(user.dailyTaskLimit), // Apply task limit styles
+                      }}
+                    >
+                      {user.dailyTaskLimit}
                     </Box>
                   </TableCell>
                   <TableCell>

@@ -36,7 +36,7 @@ const AdminTransactionHistory = () => {
           axios.get(`${process.env.REACT_APP_API_HOST}/api/training-bonus`), // All training bonuses
           axios.get(`${process.env.REACT_APP_API_HOST}/api/approvals/approve`), // All approved bonuses
           axios.get(`${process.env.REACT_APP_API_HOST}/api/approvals/reject`), // All rejected bonuses
-          axios.get(`${process.env.REACT_APP_API_HOST}/api/referral-payment`), // All referral payments
+          axios.get(`${process.env.REACT_APP_API_HOST}/api/approvals/referral/approve`), // All referral payments
           axios.get(`${process.env.REACT_APP_API_HOST}/api/approvals/referral/approve`), // All approved referral payments
           axios.get(`${process.env.REACT_APP_API_HOST}/api/approvals/referral/reject`), // All rejected referral payments
         ]);
