@@ -12,6 +12,7 @@ import {
   Grid,
   Box,
   Button,
+  TextField, // Import TextField for search box
 } from "@mui/material";
 import axios from "axios";
 
@@ -19,6 +20,7 @@ const ReferenceBonusApproved = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   const fetchApprovedReferralPayments = async () => {
     setLoading(true);
@@ -66,6 +68,11 @@ const ReferenceBonusApproved = () => {
     }
   };
 
+  // Filter transactions based on search query
+  const filteredTransactions = transactions.filter((transaction) =>
+    transaction.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <Grid container spacing={3} justifyContent="center">
       <Grid item xs={12}>
@@ -79,6 +86,16 @@ const ReferenceBonusApproved = () => {
       </Grid>
 
       <Grid item xs={12} sm={10}>
+        {/* Search box */}
+        <TextField
+          label="Search by Username"
+          variant="outlined"
+          fullWidth
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
+
         {loading ? (
           <CircularProgress />
         ) : error ? (
@@ -90,7 +107,7 @@ const ReferenceBonusApproved = () => {
               Retry
             </Button>
           </Box>
-        ) : transactions.length === 0 ? (
+        ) : filteredTransactions.length === 0 ? (
           <Typography variant="h6">No transactions found.</Typography>
         ) : (
           <TableContainer component={Paper}>
@@ -108,7 +125,7 @@ const ReferenceBonusApproved = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {transactions.map((transaction) => (
+                {filteredTransactions.map((transaction) => (
                   <TableRow key={transaction._id}>
                     <TableCell>
                       {new Date(transaction.createdAt).toLocaleDateString("en-US", {
