@@ -517,7 +517,7 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
 
     // Update daily task limit only if the new value is greater than the existing one
     if (referralPayment.DailyTaskLimit > user.dailyTaskLimit) {
-      user.dailyTaskLimit = referralPayment.DailyTaskLimit;
+      user.dailyTaskLimit += referralPayment.DailyTaskLimit;
     }
 
     const { directBonus, indirectBonus, transactionAmount } = referralPayment;
