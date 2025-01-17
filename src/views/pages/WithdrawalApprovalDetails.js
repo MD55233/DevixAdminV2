@@ -42,9 +42,12 @@ const WithdrawalApprovalDetails = ({ approval, onApprove, onReject }) => {
           <Typography variant="h6">
             Username: {approval.userId ? approval.userId.username : 'N/A'}
           </Typography>
+          
           <Typography variant="body1">Transaction ID: {approval._id}</Typography>
           <Typography variant="body1">Amount: PKR{approval.amount}</Typography>
-          <Typography variant="body1">Gateway: {approval.gateway}</Typography>
+          <Typography variant="h4" color="#F44336">Account Title: {approval.accountTitle}</Typography>
+          <Typography variant="h4" color="#F44336">Account Number: {approval.accountNumber}</Typography>
+          <Typography variant="h4" color="#F44336">Gateway: {approval.gateway}</Typography>
           <Typography variant="body1">Status: {approval.status}</Typography>
           <Typography variant="body1">
             Requested on: {new Date(approval.createdAt).toLocaleString()}

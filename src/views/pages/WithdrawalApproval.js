@@ -62,11 +62,12 @@ const WithdrawalApproval = () => {
           <Grid item xs={12} sm={6} md={4} key={approval._id}>
             <Card>
               <CardContent>
-                <Typography variant="h5">Username: {approval.userId ? approval.userId.username : 'N/A'}</Typography>
+                <Typography variant="h4">Username: {approval.userId ? approval.userId.username : 'N/A'}</Typography>
                 <Typography variant="body2">Transaction ID: {approval.transactionId || approval._id}</Typography>
-                <Typography variant="body2">Amount: PKR{approval.amount}</Typography>
-                <Typography variant="body2">Account Number: {approval.accountNumber}</Typography>
-                <Typography variant="body2">Gateway: {approval.gateway}</Typography>
+                <Typography variant="h4">Amount: PKR{approval.amount}</Typography>
+                 <Typography variant="h4" color="#F44336">Account Title: {approval.accountTitle}</Typography>
+                         <Typography variant="h4" color="#F44336">Account Number: {approval.accountNumber}</Typography>
+                         <Typography variant="h4" color="#F44336">Gateway: {approval.gateway}</Typography>
                 <Typography variant="body2">Status: {approval.status}</Typography>
                 <Typography variant="body2">Requested on: {new Date(approval.createdAt).toLocaleString()}</Typography>
                 <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={() => handleApprovalClick(approval)}>
