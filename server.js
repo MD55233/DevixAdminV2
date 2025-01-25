@@ -7,6 +7,9 @@
   require('dotenv').config();
   const app = express();
   const multer = require('multer');
+// Increase payload size limits using Express's built-in middleware
+app.use(express.json({ limit: '10mb' })); // For JSON payloads
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // For URL-encoded payloads
 
 // SMTP Configuration for Hostinger Webmail
 const transporter = nodemailer.createTransport({
@@ -63,7 +66,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true , unique: true },
     email: { type: String, required: true},
     phoneNumber: { type: String, required: true },
-    accountType: { type: String, required: true,  default: 'Starter' }, // e.g., "Starter", "Pro", "Premium"
+    accountType: { type: String, required: true,  default: 'none' }, // e.g., "Starter", "Pro", "Premium"
     balance: { type: Number, default: 0 },
     withdrawalBalance: { type: Number, default: 0 },
     dailyTaskLimit: { type: Number, required: true , default: 0},
@@ -100,6 +103,7 @@ const userSchema = new mongoose.Schema(
     profilePicture: { type: String, default: null },
     parent: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     pendingCommission: { type: Number, default: 0 },
+    lastSalaryClaimDate: { type: Date, default: null }, // Added field
   },
   { timestamps: true }
 );
@@ -442,23 +446,6 @@ app.delete('/api/plans/:id', async (req, res) => {
 
 // ]-------------------||Get Profile Data by username from User Model||-------------------------[
 
-app.get('/api/users/:username', async (req, res) => {
-  try {
-    const user = await User.findOne({ username: req.params.username });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json({
-      fullName: user.fullName,
-      rank: user.rank,
-      plan: user.plan,
-      refPer: user.refPer,
-      refParentPer: user.refParentPer
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
 // ]----------------||Implementation of approving Referrals||------------------[
 
 // Define schema for ReferralPaymentVerification
@@ -519,6 +506,11 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
     if (referralPayment.DailyTaskLimit > user.dailyTaskLimit) {
       user.dailyTaskLimit += referralPayment.DailyTaskLimit;
     }
+
+
+    // Set plan activation date to the current date
+    user.planActivationDate = new Date();
+
 
     const { directBonus, indirectBonus, transactionAmount } = referralPayment;
     let totalBonusDistributed = 0;
@@ -1099,14 +1091,36 @@ app.get('/api/users-activated', async (req, res) => {
 
 app.get('/api/users', async (req, res) => {
   try {
-    // Fetch all users from the database
-    const users = await User.find();
-    res.status(200).json(users);
+    // Set headers to allow streaming
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    // Start the JSON array
+    res.write('[');
+
+    let firstRecord = true;
+
+    // Use a Mongoose cursor to stream users
+    const cursor = User.find().cursor();
+
+    // Use for await...of to iterate through the cursor
+    for await (const user of cursor) {
+      if (!firstRecord) {
+        res.write(','); // Add a comma between JSON objects
+      }
+      res.write(JSON.stringify(user));
+      firstRecord = false;
+    }
+
+    // Close the JSON array
+    res.write(']');
+    res.end();
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Server error. Could not fetch users.' });
   }
 });
+
 
 // POST endpoint to add a new user
 app.post('/api/users', async (req, res) => {
@@ -1178,12 +1192,35 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-// Update a user by ID
+
 app.put('/api/users/:id', async (req, res) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updatedUser);
+    const allowedFields = [
+      'fullName',
+      'username',
+      
+      'email',
+      'phoneNumber',
+      'accountType',
+      'balance',
+      'withdrawalBalance',
+      'bonusBalance',
+      'dailyTaskLimit',
+      'pendingCommission',
+    ];
+
+    // Filter the req.body to include only allowed fields
+    const updateData = Object.keys(req.body).reduce((acc, key) => {
+      if (allowedFields.includes(key)) {
+        acc[key] = req.body[key];
+      }
+      return acc;
+    }, {});
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.status(200).json(updatedUser);
   } catch (error) {
+    console.error('Error updating user:', error);
     res.status(500).send('Error updating user');
   }
 });
@@ -1902,5 +1939,91 @@ app.delete('/payment-accounts/:id', async (req, res) => {
     res.status(200).json({ message: 'Payment account deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting payment account', error });
+  }
+});
+
+
+
+// ]--------------------||EndPoint to Handle salary||---------------------------[
+// Salary Schema
+const salarySchema = new mongoose.Schema(
+  {
+    salaryAmount: { type: Number, required: true },
+    claimDate: { type: Date, default: null },
+    claimableAfter: { type: Date, required: true },
+    status: { type: Number, default: null },
+    directReferralCount: { type: Number, required: true, min: 0 },
+    indirectReferralCount: { type: Number, required: true, min: 0 },
+    transactionHistory: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        amount: { type: Number, required: true },
+        description: { type: String, trim: true },
+        type: { type: String, enum: ['credit', 'debit'], required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+  },
+  { timestamps: true }
+);
+
+// Define Salary model
+const Salary = mongoose.model('Salary', salarySchema);
+
+// Get all salary plans
+app.get('/api/salaries', async (req, res) => {
+  try {
+    const salaries = await Salary.find();
+    res.status(200).json(salaries);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching salary plans', error });
+  }
+});
+
+// Add new salary plan
+app.post('/api/salaries', async (req, res) => {
+  try {
+    const { salaryAmount, claimableAfter, status, directReferralCount, indirectReferralCount, transactionHistory } = req.body;
+    if (directReferralCount < 0 || indirectReferralCount < 0) {
+      return res.status(400).json({ message: 'Referral counts cannot be negative' });
+    }
+    const newSalary = new Salary({ salaryAmount, claimableAfter, status, directReferralCount, indirectReferralCount, transactionHistory });
+    await newSalary.save();
+    res.status(201).json(newSalary);
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding salary plan', error });
+  }
+});
+
+// Update a salary plan
+app.put('/api/salaries/:id', async (req, res) => {
+  try {
+    const updatedSalary = await Salary.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedSalary) return res.status(404).json({ message: 'Salary not found' });
+    res.status(200).json(updatedSalary);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating salary plan', error });
+  }
+});
+
+// Delete a salary plan
+app.delete('/api/salaries/:id', async (req, res) => {
+  try {
+    const deletedSalary = await Salary.findByIdAndDelete(req.params.id);
+    if (!deletedSalary) return res.status(404).json({ message: 'Salary not found' });
+    res.status(200).json({ message: 'Salary deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting salary plan', error });
+  }
+});
+
+// Get a single salary plan by ID
+app.get('/api/salaries/:id', async (req, res) => {
+  try {
+    const salary = await Salary.findById(req.params.id);
+    if (!salary) return res.status(404).json({ message: 'Salary not found' });
+    res.status(200).json(salary);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching salary plan', error });
   }
 });

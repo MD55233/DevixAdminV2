@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Grid, Card, CardContent, TextField, Switch, FormControlLabel } from '@mui/material';
+import {
+  Button,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  TextField,
+  Switch,
+  FormControlLabel,
+
+  Skeleton,
+  Alert,
+} from '@mui/material';
 import axios from 'axios';
 import AddUser from './AddUser';
 
@@ -7,44 +19,74 @@ const ActiveUsers = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null); // For both adding and editing
+  const [selectedUser, setSelectedUser] = useState(null); // For add/edit
   const [withdrawalEnabled, setWithdrawalEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Fetch all users
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${process.env.REACT_APP_API_HOST}/api/users`);
       setUsers(response.data);
       setFilteredUsers(response.data); // Initialize filtered users
-    } catch (error) {
-      console.error('Error fetching users:', error);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError('Failed to fetch users. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch withdrawal status from the server
+  // Fetch withdrawal status
   const fetchWithdrawalStatus = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_HOST}/api/settings/withdrawal-status`);
-      setWithdrawalEnabled(response.data.withdrawalEnabled); // Update with new schema key
-    } catch (error) {
-      console.error('Error fetching withdrawal status:', error);
+      setWithdrawalEnabled(response.data.withdrawalEnabled);
+    } catch (err) {
+      console.error('Error fetching withdrawal status:', err);
+      setError('Failed to fetch withdrawal status.');
     }
   };
 
+  // Toggle withdrawal status
   const toggleWithdrawalStatus = async () => {
     try {
       const newStatus = !withdrawalEnabled;
-      await axios.post(`${process.env.REACT_APP_API_HOST}/api/settings/withdrawal-status`, { withdrawalEnabled: newStatus }); // Update with new schema key
+      await axios.post(`${process.env.REACT_APP_API_HOST}/api/settings/withdrawal-status`, {
+        withdrawalEnabled: newStatus,
+      });
       setWithdrawalEnabled(newStatus);
-    } catch (error) {
-      console.error('Error updating withdrawal status:', error);
+    } catch (err) {
+      console.error('Error updating withdrawal status:', err);
+      setError('Failed to update withdrawal status.');
     }
   };
 
+  // Initial data fetch
   useEffect(() => {
     fetchUsers();
     fetchWithdrawalStatus();
   }, []);
+
+  // Handle search input (debounced)
+  const handleSearchChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    if (value) {
+      const filtered = users.filter(
+        (user) =>
+          user.fullName.toLowerCase().includes(value) ||
+          user.username.toLowerCase().includes(value)
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  };
 
   // Handle add or edit user
   const handleAddOrEditUserClick = (user = null) => {
@@ -56,57 +98,63 @@ const ActiveUsers = () => {
     try {
       await axios.delete(`${process.env.REACT_APP_API_HOST}/api/users/${userId}`);
       setUsers(users.filter((user) => user._id !== userId));
-      setFilteredUsers(filteredUsers.filter((user) => user._id !== userId)); // Update filtered users as well
-    } catch (error) {
-      console.error('Error deleting user:', error);
+      setFilteredUsers(filteredUsers.filter((user) => user._id !== userId));
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      setError('Failed to delete user.');
     }
   };
 
-  // Handle user form cancel
+  // Handle transfer of all pending commissions
+  const handleTransferAllCommissions = async () => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/transfer-all-commissions`);
+      fetchUsers(); // Refresh the users list
+    } catch (err) {
+      console.error('Error transferring all pending commissions:', err);
+      setError('Failed to transfer pending commissions.');
+    }
+  };
+
+  // Handle transfer of a single user's commission
+  const handleTransferCommission = async (username) => {
+    try {
+      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/transfer-commission/${username}`);
+      fetchUsers(); // Refresh the users list
+    } catch (err) {
+      console.error('Error transferring commission:', err);
+      setError('Failed to transfer pending commission.');
+    }
+  };
+
+  // Handle cancel button for the Add/Edit User form
   const handleCancel = () => {
     setSelectedUser(null);
   };
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-
-    // Filter users based on search term
-    if (value) {
-      const filtered = users.filter((user) =>
-        user.fullName.toLowerCase().includes(value) ||
-        user.username.toLowerCase().includes(value)
-      );
-      setFilteredUsers(filtered);
-    } else {
-      setFilteredUsers(users); // Reset to original user list if search is empty
-    }
-  };
-
-  // Transfer pending commission to main balance for a single user
-  const handleTransferCommission = async (username) => {
-    try {
-      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/transfer-commission/${username}`);
-      fetchUsers(); // Refresh the users list after transfer
-    } catch (error) {
-      console.error('Error transferring pending commission:', error);
-    }
-  };
-
-  // Transfer all users' pending commissions to main balance
-  const handleTransferAllCommissions = async () => {
-    try {
-      await axios.post(`${process.env.REACT_APP_API_HOST}/api/users/transfer-all-commissions`);
-      fetchUsers(); // Refresh the users list after transfer
-    } catch (error) {
-      console.error('Error transferring all pending commissions:', error);
-    }
-  };
+  // Render loading skeleton
+  if (loading) {
+    return (
+      <Grid container spacing={3}>
+        {Array.from(new Array(6)).map((_, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <Skeleton variant="rectangular" height={300} />
+          </Grid>
+        ))}
+      </Grid>
+    );
+  }
 
   return (
     <Grid container spacing={3}>
-      {/* Withdrawal Toggle Button */}
+      {/* Display Errors */}
+      {error && (
+        <Grid item xs={12}>
+          <Alert severity="error">{error}</Alert>
+        </Grid>
+      )}
+
+      {/* Withdrawal Toggle */}
       <Grid item xs={12}>
         <FormControlLabel
           control={
@@ -128,17 +176,15 @@ const ActiveUsers = () => {
           fullWidth
           value={searchTerm}
           onChange={handleSearchChange}
-          style={{ marginBottom: '20px' }}
         />
       </Grid>
 
-      {/* Transfer All Pending Commissions Button */}
+      {/* Transfer All Button */}
       <Grid item xs={12}>
         <Button
           variant="contained"
           color="success"
           onClick={handleTransferAllCommissions}
-          style={{ marginBottom: '20px' }}
         >
           Transfer All Pending Commissions
         </Button>
@@ -161,7 +207,7 @@ const ActiveUsers = () => {
           <Grid item xs={12} sm={6} md={4} key={user._id}>
             <Card>
               <CardContent>
-                <Typography variant="h5">Username: {user.username}</Typography>
+              <Typography variant="h5">Username: {user.username}</Typography>
                 <Typography variant="h5">Password: {user.password}</Typography>
                 <Typography variant="body2">Full Name: {user.fullName}</Typography>
                 <Typography variant="body2">Email: {user.email}</Typography>
@@ -176,7 +222,6 @@ const ActiveUsers = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  sx={{ mt: 2 }}
                   onClick={() => handleAddOrEditUserClick(user)} // Edit existing user
                 >
                   Edit User
@@ -184,7 +229,6 @@ const ActiveUsers = () => {
                 <Button
                   variant="contained"
                   color="secondary"
-                  sx={{ mt: 2, ml: 2 }}
                   onClick={() => handleDeleteUser(user._id)}
                 >
                   Delete User
@@ -192,7 +236,6 @@ const ActiveUsers = () => {
                 <Button
                   variant="contained"
                   color="success"
-                  sx={{ mt: 2, ml: 2 }}
                   onClick={() => handleTransferCommission(user.username)}
                 >
                   Transfer Pending Commission

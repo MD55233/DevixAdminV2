@@ -68,6 +68,7 @@ const ReferenceApproval = () => {
                     <Typography variant="body2">Amount: PKR {approval.transactionAmount}</Typography>
                     <Typography variant="body2">Gateway: {approval.gateway}</Typography>
                     <Typography variant="body2">Status: {approval.status}</Typography>
+                    
                     <Typography variant="body2">
                       Requested on: {new Date(approval.createdAt).toLocaleString()}
                     </Typography>
