@@ -28,6 +28,13 @@ const user = {
       url: '/users/plans-management',
       icon: icons.IconUsers
     },
+    {
+      id: ' Salary Plans Management',
+      title: 'Salary Management',
+      type: 'item',
+      url: '/users/salary-management',
+      icon: icons.IconUsers
+    },
  
     {
       id: 'Admin Notification',

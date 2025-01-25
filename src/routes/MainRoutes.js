@@ -18,6 +18,7 @@ const TrainingBonusApproved = Loadable(lazy(() => import('views/utilities/Traini
 // User Routes
 const ActiveUsers = Loadable(lazy(() => import('views/user/ActiveUsers')));
 const PaymentAccount = Loadable(lazy(() => import('views/user/PaymentPlan')));
+const SalaryPlansManagement = Loadable(lazy(() => import('views/user/SalaryPlansManagement')));
 const TasksManagement = Loadable(lazy(() => import('views/user/TasksManagement')));
 const AddUser = Loadable(lazy(() => import('views/user/AddUser')));
 const AdminNotification = Loadable(lazy(() => import('views/user/AdminNotification')));
@@ -85,6 +86,10 @@ const MainRoutes = {
         {
           path: 'plans-management',
           element: <PlansManagement />
+        },
+        {
+          path: 'Salary-management',
+          element: <SalaryPlansManagement />
         },
         {
           path: 'add-user',
