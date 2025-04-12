@@ -2,7 +2,7 @@
   "name": "devix-admin",
   "version": "3.3.2",
   "private": true,
-  "homepage": "https://admin.Devix.com/dasboard/default",
+  "homepage": "https://admin.Devix.com/",
   "dependencies": {
     "@emotion/cache": "^11.9.3",
     "@emotion/react": "^11.11.1",
