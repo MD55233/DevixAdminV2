@@ -23,12 +23,9 @@ const LogoSection = () => {
       to={config.defaultPath}
       sx={{ display: 'flex', alignItems: 'center' }}
     >
-      <Box sx={{ mt: 1, mr: 0.5 }}>
-        {' '}
-        {/* Add top margin to logo and reduce right margin */}
-        <img src={Devixberry} alt="Logo" width="32" height="32" />
-      </Box>
+   
       <Box sx={{ display: 'flex' }}>
+      <img src={Devixberry} alt="Logo" width="32" height="32" />
         <Typography
           variant="h6"
           sx={{
