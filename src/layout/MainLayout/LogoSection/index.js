@@ -6,7 +6,7 @@ import { ButtonBase, Typography, Box } from '@mui/material';
 
 // project imports
 import config from 'config';
-import laikostarberry from 'assets/images/laikostarberry.png'; // Adjust the path to where your SVG file is located
+import Devixberry from 'assets/images/Devixberry.png'; // Adjust the path to where your SVG file is located
 import { MENU_OPEN } from 'store/actions';
 
 // ==============================|| MAIN LOGO ||============================== //
@@ -26,7 +26,7 @@ const LogoSection = () => {
       <Box sx={{ mt: 1, mr: 0.5 }}>
         {' '}
         {/* Add top margin to logo and reduce right margin */}
-        <img src={laikostarberry} alt="Logo" width="92" height="32" />
+        <img src={Devixberry} alt="Logo" width="92" height="32" />
       </Box>
       <Box sx={{ display: 'flex' }}>
         <Typography
@@ -39,7 +39,7 @@ const LogoSection = () => {
             color: 'secondary.main'
           }}
         >
-          Laiko
+          Devix
         </Typography>
         <Typography
           variant="h6"
@@ -52,7 +52,7 @@ const LogoSection = () => {
             mr: 3
           }}
         >
-          Star
+          Admin
         </Typography>
       </Box>
     </ButtonBase>

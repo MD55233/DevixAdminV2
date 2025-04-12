@@ -35,7 +35,7 @@ const ReferenceBonusApproved = () => {
         type: "Approved Referral Payment",
         amount: item.transactionAmount,
         remarks: "Payment approved",
-        imagePath: `https://api1.laikostar.com/${item.imagePath.replace(/\\/g, "/")}`,
+        imagePath: `https://api1.Devix.com/${item.imagePath.replace(/\\/g, "/")}`,
       }));
 
       combinedTransactions.sort(

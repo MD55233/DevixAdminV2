@@ -581,7 +581,7 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
 
     // Send email to the user
     const mailOptions = {
-      from: `LaikoStar.Team <${process.env.SMTP_EMAIL}>`,
+      from: `Devix.Team <${process.env.SMTP_EMAIL}>`,
       to: user.email, // User's email
       subject: 'Referral Payment Approved',
       html: `
@@ -596,12 +596,12 @@ app.post('/api/approvals/referral/approve', async (req, res) => {
           <h3 style="color: #4CAF50;">Keep Growing</h3>
           <p>Continue sharing and growing your network. Click the button below to log in to your account and explore more opportunities:</p>
           <div style="text-align: center; margin: 20px 0;">
-            <a href="https://account.laikostar.com/pages/login/login3" 
+            <a href="https://account.Devix.com/pages/login/login3" 
                style="text-decoration: none; padding: 10px 20px; color: white; background-color: #4CAF50; border-radius: 5px; font-weight: bold;">Log In to Your Account</a>
           </div>
           <p>If you have any questions, feel free to reach out to our support team.</p>
           <p>Thank you for being a valued member of our community!</p>
-          <p style="margin-top: 20px;">Warm regards,<br><strong>The Team at LaikoStar</strong></p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The Team at Devix</strong></p>
         </div>
       `,
     };
@@ -671,7 +671,7 @@ app.post('/api/approvals/referral/reject', async (req, res) => {
 
     // Send email to the user about the rejection
     await transporter.sendMail({
-      from: `LaikoStar Team <${process.env.SMTP_EMAIL}>`,
+      from: `Devix Team <${process.env.SMTP_EMAIL}>`,
       to: user.email, // Use email from the User schema
       subject: 'Referral Payment Request Rejected',
       html: `
@@ -684,7 +684,7 @@ app.post('/api/approvals/referral/reject', async (req, res) => {
             <p><strong>Amount:</strong> ${referralPayment.amount}</p>
           </div>
           <p>If you have any questions or need further assistance, please reach out to our support team.</p>
-          <p style="margin-top: 20px;">Warm regards,<br><strong>The LaikoStar Team</strong></p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The Devix Team</strong></p>
         </div>
       `,
     });
@@ -842,7 +842,7 @@ app.post('/api/withdrawals/approve', async (req, res) => {
 
     // Send Email Notification to User
     await transporter.sendMail({
-      from: `LaikoStar.Team <${process.env.SMTP_EMAIL}>`,
+      from: `Devix.Team <${process.env.SMTP_EMAIL}>`,
       to: user.email,
       subject: 'Your Withdrawal Request is Approved',
       html: `
@@ -859,8 +859,8 @@ app.post('/api/withdrawals/approve', async (req, res) => {
           <p>Please check your account for the credited amount. If you encounter any issues, feel free to contact our support team.</p>
           <h3 style="color: #4CAF50;">Need Help?</h3>
           <p>Our support team is here to assist you. Reach out to us via email or our support page for any questions.</p>
-          <p>Thank you for choosing LaikoStar!</p>
-          <p style="margin-top: 20px;">Warm regards,<br><strong>The LaikoStar Team</strong></p>
+          <p>Thank you for choosing Devix!</p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The Devix Team</strong></p>
         </div>
       `,
     });
@@ -895,7 +895,7 @@ app.post('/api/withdrawals/reject', async (req, res) => {
 
     // Send Email Notification to User
     await transporter.sendMail({
-      from: `LaikoStar.Team <${process.env.SMTP_EMAIL}>`,
+      from: `Devix.Team <${process.env.SMTP_EMAIL}>`,
       to: user.email,
       subject: 'Your Withdrawal Request Has Been Rejected',
       html: `
@@ -915,7 +915,7 @@ app.post('/api/withdrawals/reject', async (req, res) => {
           <h3 style="color: #E53935;">Need Help?</h3>
           <p>If you have any questions or require assistance, please contact our support team. We are here to help you.</p>
           <p>Thank you for your understanding.</p>
-          <p style="margin-top: 20px;">Warm regards,<br><strong>The LaikoStar Team</strong></p>
+          <p style="margin-top: 20px;">Warm regards,<br><strong>The Devix Team</strong></p>
         </div>
       `,
     });

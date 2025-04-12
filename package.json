@@ -1,8 +1,8 @@
 {
-  "name": "laikostar Admin",
+  "name": "Devix Admin",
   "version": "3.3.2",
   "private": true,
-  "homepage": "https://admin.laikostar.com/dasboard/default",
+  "homepage": "https://admin.Devix.com/dasboard/default",
   "dependencies": {
     "@emotion/cache": "^11.9.3",
     "@emotion/react": "^11.11.1",

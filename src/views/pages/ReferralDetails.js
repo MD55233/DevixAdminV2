@@ -80,7 +80,7 @@ const ReferralDetails = ({ approval, onApprove, onReject }) => {
             Requested on: {new Date(approval.createdAt).toLocaleString()}
           </Typography>
           <img
-            src={`https://api1.laikostar.com/uploads/${approval.imagePath}`}
+            src={`https://api1.Devix.com/uploads/${approval.imagePath}`}
             alt="Transaction"
             style={{ width: '100%', marginTop: '10px' }}
           />
