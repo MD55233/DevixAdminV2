@@ -6,7 +6,7 @@ import { ButtonBase, Typography, Box } from '@mui/material';
 
 // project imports
 import config from 'config';
-import Devixberry from 'assets/images/Devixberry.png'; // Adjust the path to where your SVG file is located
+import likostarlogo from 'assets/images/Devixberry.png'; // Adjust the path to where your SVG file is located
 import { MENU_OPEN } from 'store/actions';
 
 // ==============================|| MAIN LOGO ||============================== //
@@ -23,16 +23,21 @@ const LogoSection = () => {
       to={config.defaultPath}
       sx={{ display: 'flex', alignItems: 'center' }}
     >
-   
+      <Box sx={{ mt: 1, mr: 0.5 }}>
+        {' '}
+        {/* Add top margin to logo and reduce right margin */}
+        
+      </Box>
       <Box sx={{ display: 'flex' }}>
-      <img src={Devixberry} alt="Logo" width="32" height="32" />
+      <img src={likostarlogo} alt="Logo" width="32" height="32" />
         <Typography
           variant="h6"
           sx={{
             fontFamily: 'Museo Sans',
             fontWeight: 700,
             fontSize: 18,
-            ml: -4,
+            ml: 1,
+            mt:0.5,
             color: 'secondary.main'
           }}
         >
@@ -44,12 +49,13 @@ const LogoSection = () => {
             fontFamily: 'Museo Sans',
             fontWeight: 300,
             fontSize: 18,
-            color: 'primary.main',
+            color: '#2CB693',
             ml: 0,
-            mr: 3
+            mr: 3,
+            mt: 0.5
           }}
         >
-          Admin
+         Seller
         </Typography>
       </Box>
     </ButtonBase>
